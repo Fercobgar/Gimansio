@@ -59,6 +59,7 @@ const RoutineBuilder = {
             ${isDefault
               ? `<span class="rb-badge-on">✓ Activa</span>`
               : `<button class="btn-xs btn-xs-primary" id="useDefaultBtn">Usar</button>`}
+            <button class="btn-xs" id="editDefaultBtn" title="Editar copia">✏️</button>
           </div>
         </div>
 
@@ -80,6 +81,17 @@ const RoutineBuilder = {
       Storage.setActiveRoutineId(null);
       State.activeDayId = null;
       showToast("✅ Rutina predefinida activada.");
+      this.render();
+    });
+
+    // Clone the default ROUTINE into the editor as an editable custom routine
+    document.getElementById("editDefaultBtn")?.addEventListener("click", () => {
+      RB.routine = {
+        id:   "r_" + Date.now(),
+        name: "Push · Pull · Legs",
+        days: JSON.parse(JSON.stringify(ROUTINE.days)),
+      };
+      RB.view = "routine";
       this.render();
     });
 
