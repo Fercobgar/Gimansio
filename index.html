@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1117" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>GymTracker 💪</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────────────────────── -->
+  <header class="app-header">
+    <span class="app-logo">GymTracker</span>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="app-date" id="headerDate"></span>
+      <button class="header-user-btn" id="headerUser" style="display:none" title="Cambiar usuario"></button>
+    </div>
+  </header>
+
+  <!-- ── Main ───────────────────────────────────────────────────────── -->
+  <main id="app" role="main">
+    <!-- rendered by app.js -->
+  </main>
+
+  <!-- ── Bottom Nav ─────────────────────────────────────────────────── -->
+  <nav class="bottom-nav" aria-label="Navegación principal">
+    <button class="nav-btn active" data-view="workout" aria-label="Entrenamiento de hoy">
+      <span class="nav-icon">🏋️</span>
+      <span>Hoy</span>
+    </button>
+    <button class="nav-btn" data-view="history" aria-label="Historial">
+      <span class="nav-icon">📊</span>
+      <span>Historial</span>
+    </button>
+    <button class="nav-btn" data-view="routines" aria-label="Rutinas">
+      <span class="nav-icon">📋</span>
+      <span>Rutinas</span>
+    </button>
+  </nav>
+
+  <!-- ── Login overlay (full-screen, above everything) ──────────────── -->
+  <div class="login-overlay" id="loginOverlay" role="dialog" aria-modal="true" aria-label="Selección de usuario">
+    <!-- rendered by auth.js -->
+  </div>
+
+  <!-- ── Exercise history / picker modal ────────────────────────────── -->
+  <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true">
+    <div class="modal" id="modal"></div>
+  </div>
+
+  <!-- ── Toast ──────────────────────────────────────────────────────── -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- ── Scripts (order matters: globals first, app last) ───────────── -->
+  <script src="js/data.js"></script>
+  <script src="js/exercises-library.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/routine-builder.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
