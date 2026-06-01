@@ -2,9 +2,10 @@ const REST_OPTIONS = ["60s", "60-90s", "90-120s", "2-3 min"];
 
 // Internal navigation state for the routine builder
 const RB = {
-  view: "list",       // "list" | "routine" | "day"
-  routine: null,      // deep-copy of the routine being edited
-  dayIdx: null,       // index of the day being edited within RB.routine
+  view: "list",         // "list" | "routine" | "day"
+  routine: null,        // deep-copy of the routine being edited
+  dayIdx: null,         // index of the day being edited within RB.routine
+  editingExIdx: null,   // index of the exercise with the edit form open
   pickerSearch: "",
   pickerMuscle: "Todos",
   pickerExpandedId: null,
@@ -199,16 +200,57 @@ const RoutineBuilder = {
     const day = RB.routine.days[RB.dayIdx];
     if (!day) { RB.view = "routine"; return this._routine(); }
 
-    const exHTML = day.exercises.length
+    const total = day.exercises.length;
+    const exHTML = total
       ? day.exercises.map((ex, i) => {
-          const repsLabel = ex.repsLabel || `${ex.repsMin || ""}${ex.repsMax ? "-" + ex.repsMax : ""} reps`;
-          return `
-            <div class="rb-ex-row">
-              <div class="rb-ex-info">
-                <span class="rb-ex-name">${ex.name}</span>
-                <span class="rb-ex-meta">${ex.sets} series · ${repsLabel} · ${ex.rest}</span>
+          const editing    = RB.editingExIdx === i;
+          const repsLabel  = ex.repsLabel || `${ex.repsMin || ""}${ex.repsMax ? "-" + ex.repsMax : ""} reps`;
+          const editForm   = editing ? `
+            <div class="ex-edit-form">
+              <div class="picker-config-row">
+                <label class="input-group">
+                  <span>Series</span>
+                  <input class="set-input" type="number" inputmode="numeric"
+                    id="edit_sets" value="${ex.sets}" min="1" max="10" />
+                </label>
+                <label class="input-group">
+                  <span>Rep mín</span>
+                  <input class="set-input" type="number" inputmode="numeric"
+                    id="edit_rmin" value="${ex.repsMin || ""}" min="1" />
+                </label>
+                <label class="input-group">
+                  <span>Rep máx</span>
+                  <input class="set-input" type="number" inputmode="numeric"
+                    id="edit_rmax" value="${ex.repsMax || ""}" min="1" />
+                </label>
               </div>
-              <button class="btn-xs rb-remove-ex" data-idx="${i}" title="Quitar">✕</button>
+              <label class="input-group" style="margin-top:8px">
+                <span>Descanso</span>
+                <select class="set-input" id="edit_rest" style="text-align:left">
+                  ${REST_OPTIONS.map((r) => `<option${r === ex.rest ? " selected" : ""}>${r}</option>`).join("")}
+                </select>
+              </label>
+              <button class="btn-primary-full" id="saveExEdit" data-idx="${i}"
+                style="width:100%;margin-top:10px">✓ Guardar cambios</button>
+            </div>` : "";
+
+          return `
+            <div class="rb-ex-row${editing ? " editing" : ""}">
+              <div class="rb-ex-row-header">
+                <div class="rb-ex-reorder">
+                  <button class="btn-xs rb-move-up" data-idx="${i}"${i === 0 ? " disabled" : ""}>↑</button>
+                  <button class="btn-xs rb-move-dn" data-idx="${i}"${i === total - 1 ? " disabled" : ""}>↓</button>
+                </div>
+                <div class="rb-ex-info">
+                  <span class="rb-ex-name">${ex.name}</span>
+                  <span class="rb-ex-meta">${ex.sets} series · ${repsLabel} · ${ex.rest}</span>
+                </div>
+                <div class="rb-ex-actions">
+                  <button class="btn-xs${editing ? " btn-xs-primary" : ""} rb-edit-ex" data-idx="${i}">✏️</button>
+                  <button class="btn-xs rb-remove-ex" data-idx="${i}">✕</button>
+                </div>
+              </div>
+              ${editForm}
             </div>`;
         }).join("")
       : `<p style="color:var(--text-muted);font-size:.85rem;padding:8px 0">Añade ejercicios desde la librería.</p>`;
@@ -237,21 +279,75 @@ const RoutineBuilder = {
   _onDay() {
     document.getElementById("backToRoutine").addEventListener("click", () => {
       this._snapDayMeta();
+      RB.editingExIdx = null;
       RB.view = "routine";
       this.render();
     });
 
     document.getElementById("addExBtn").addEventListener("click", () => {
       this._snapDayMeta();
+      RB.editingExIdx = null;
       RB.pickerSearch = "";
       RB.pickerMuscle = "Todos";
       RB.pickerExpandedId = null;
       this._openPicker();
     });
 
+    // ── Reorder ──────────────────────────────────────────────────────────
+    document.querySelectorAll(".rb-move-up").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const i   = parseInt(btn.dataset.idx, 10);
+        const exs = RB.routine.days[RB.dayIdx].exercises;
+        [exs[i - 1], exs[i]] = [exs[i], exs[i - 1]];
+        if      (RB.editingExIdx === i)     RB.editingExIdx = i - 1;
+        else if (RB.editingExIdx === i - 1) RB.editingExIdx = i;
+        this.render();
+      });
+    });
+
+    document.querySelectorAll(".rb-move-dn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const i   = parseInt(btn.dataset.idx, 10);
+        const exs = RB.routine.days[RB.dayIdx].exercises;
+        [exs[i], exs[i + 1]] = [exs[i + 1], exs[i]];
+        if      (RB.editingExIdx === i)     RB.editingExIdx = i + 1;
+        else if (RB.editingExIdx === i + 1) RB.editingExIdx = i;
+        this.render();
+      });
+    });
+
+    // ── Toggle edit form ──────────────────────────────────────────────────
+    document.querySelectorAll(".rb-edit-ex").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const i = parseInt(btn.dataset.idx, 10);
+        RB.editingExIdx = RB.editingExIdx === i ? null : i;
+        this.render();
+      });
+    });
+
+    // ── Save exercise edits ───────────────────────────────────────────────
+    document.getElementById("saveExEdit")?.addEventListener("click", (e) => {
+      const i  = parseInt(e.currentTarget.dataset.idx, 10);
+      const ex = RB.routine.days[RB.dayIdx].exercises[i];
+      const sets    = parseInt(document.getElementById("edit_sets").value, 10);
+      const repsMin = parseInt(document.getElementById("edit_rmin").value, 10);
+      const repsMax = parseInt(document.getElementById("edit_rmax").value, 10);
+      if (sets)    ex.sets    = sets;
+      if (repsMin) ex.repsMin = repsMin;
+      if (repsMax) ex.repsMax = repsMax;
+      ex.rest      = document.getElementById("edit_rest").value;
+      ex.repsLabel = null; // clear timed label, use numeric from now on
+      RB.editingExIdx = null;
+      this.render();
+    });
+
+    // ── Remove ────────────────────────────────────────────────────────────
     document.querySelectorAll(".rb-remove-ex").forEach((btn) => {
       btn.addEventListener("click", () => {
-        RB.routine.days[RB.dayIdx].exercises.splice(parseInt(btn.dataset.idx, 10), 1);
+        const i = parseInt(btn.dataset.idx, 10);
+        RB.routine.days[RB.dayIdx].exercises.splice(i, 1);
+        if (RB.editingExIdx === i)      RB.editingExIdx = null;
+        else if (RB.editingExIdx > i)   RB.editingExIdx--;
         this.render();
       });
     });

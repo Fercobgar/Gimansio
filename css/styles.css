@@ -821,18 +821,43 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 11px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  overflow: hidden;
   margin-bottom: 6px;
 }
 .rb-ex-row:last-child { margin-bottom: 0; }
+.rb-ex-row.editing    { border-color: var(--primary); }
+
+.rb-ex-row-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.rb-ex-reorder {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.rb-ex-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
 
 .rb-ex-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-.rb-ex-name { font-weight: 700; font-size: .88rem; }
+.rb-ex-name { font-weight: 700; font-size: .88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rb-ex-meta { font-size: .73rem; color: var(--text-muted); }
+
+.ex-edit-form {
+  border-top: 1px solid var(--border);
+  padding: 12px 14px;
+  background: var(--surface2);
+}
+
+.btn-xs:disabled { opacity: 0.3; cursor: default; pointer-events: none; }
 
 /* ── Exercise picker (inside modal) ───────────────────────────────────── */
 .picker-muscles {
