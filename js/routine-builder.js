@@ -59,7 +59,7 @@ const RoutineBuilder = {
             ${isDefault
               ? `<span class="rb-badge-on">✓ Activa</span>`
               : `<button class="btn-xs btn-xs-primary" id="useDefaultBtn">Usar</button>`}
-            <button class="btn-xs" id="editDefaultBtn" title="Editar copia">✏️</button>
+            <button class="btn-xs" id="editDefaultBtn">✏️ Editar</button>
           </div>
         </div>
 
@@ -195,8 +195,16 @@ const RoutineBuilder = {
       const name = document.getElementById("routineName").value.trim();
       if (!name) { document.getElementById("routineName").focus(); return; }
       RB.routine.name = name;
+      const isNew = !Storage.getRoutines().find((r) => r.id === RB.routine.id);
       Storage.saveRoutine(RB.routine);
-      showToast("✅ Rutina guardada.");
+      if (isNew) {
+        // Auto-activate newly created / cloned routines
+        Storage.setActiveRoutineId(RB.routine.id);
+        State.activeDayId = null;
+        showToast("✅ Rutina guardada y activada.");
+      } else {
+        showToast("✅ Cambios guardados.");
+      }
       RB.view = "list";
       this.render();
     });
